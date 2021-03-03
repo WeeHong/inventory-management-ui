@@ -1,17 +1,19 @@
 import React from "react";
-import { Input, Table, Button, Space } from "antd";
+import { Input, Table, Button, Space, Radio } from "antd";
 import Highlighter from "react-highlight-words";
-import { SearchOutlined } from "@ant-design/icons";
+import { PlusOutlined, MinusOutlined, SearchOutlined } from "@ant-design/icons";
 
 import { SESSION_KEYS } from "../../constants";
 import Create from "./Create";
+import styled from "styled-components";
 
 function Product() {
   const [isModalVisible, setIsModalVisible] = React.useState(false);
-
+  const [isDelete, setIsDelete] = React.useState(false);
   const [product, setProduct] = React.useState([]);
   const [searchText, setSearchText] = React.useState("");
   const [column, setColumn] = React.useState("");
+  const [selectionType, setSelectionType] = React.useState<"checkbox" | "radio">("checkbox");
 
   const showModal = () => {
     setIsModalVisible(true);
@@ -27,8 +29,10 @@ function Product() {
     })
       .then((res) => res.json())
       .then(({ data }) => {
+        data = data.map((v: any, i: number) => {
+          return Object.assign({ key: i.toString() }, v);
+        });
         setProduct(data);
-        console.log(data);
       })
       .catch((error) => {
         console.log(error);
@@ -124,6 +128,20 @@ function Product() {
     setSearchText("");
   };
 
+  const rowSelection = {
+    onChange: (selectedRowKeys: React.Key[], selectedRows: any[]) => {
+      console.log(`selectedRowKeys: ${selectedRowKeys}`, "selectedRows: ", selectedRows);
+      if (selectedRowKeys.length > 0) {
+        setIsDelete(true);
+      } else {
+        setIsDelete(false);
+      }
+    },
+    getCheckboxProps: (record: any) => ({
+      name: record.title,
+    }),
+  };
+
   const columns = [
     {
       title: "Name",
@@ -136,7 +154,6 @@ function Product() {
       title: "Base Price",
       dataIndex: "base_price",
       key: "basePrice",
-      width: "20%",
       ...getColumnSearchProps("base_price"),
     },
     {
@@ -156,8 +173,8 @@ function Product() {
       key: "action",
       render: (text: any, record: any) => (
         <Space size="middle">
-          <a>Invite {record.name}</a>
-          <a>Delete</a>
+          <Button>Show Barcode</Button>
+          <Button>Edit</Button>
         </Space>
       ),
     },
@@ -165,13 +182,44 @@ function Product() {
 
   return (
     <>
-      <Button type="primary" onClick={showModal}>
-        Open Modal
-      </Button>
+      <ButtonWrapper>
+        <Button type="primary" onClick={showModal} style={{ marginRight: 5 }}>
+          <PlusOutlined />
+          Create
+        </Button>
+        {isDelete && (
+          <Button type="primary" danger onClick={() => alert("Delete")}>
+            <MinusOutlined />
+            Delete
+          </Button>
+        )}
+      </ButtonWrapper>
       <Create show={isModalVisible} setShow={setIsModalVisible} />
-      <Table columns={columns} dataSource={product} />
+      <Radio.Group
+        onChange={({ target: { value } }) => {
+          setSelectionType(value);
+        }}
+        value={selectionType}
+      >
+        <Radio value="checkbox">Checkbox</Radio>
+        <Radio value="radio">radio</Radio>
+      </Radio.Group>
+      <Table
+        rowSelection={{
+          type: selectionType,
+          ...rowSelection,
+        }}
+        columns={columns}
+        dataSource={product}
+      />
     </>
   );
 }
 
 export default Product;
+
+const ButtonWrapper = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 15px;
+`;
