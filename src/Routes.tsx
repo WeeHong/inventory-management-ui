@@ -1,34 +1,18 @@
 import React from "react";
-import { Route, RouteProps } from "react-router-dom";
+import { Route } from "react-router-dom";
 
-import Dashboard from "pages/Dashboard";
-import Content from "pages/Content";
+import ProtectedRoute from "components/Auth/ProtectedRoute";
 
-interface UniqueProps extends RouteProps {
-  id: string;
-}
-
-const routes: UniqueProps[] = [
-  {
-    path: "/",
-    component: Dashboard,
-    exact: true,
-    id: "dashboard",
-  },
-  {
-    path: "/content",
-    component: Content,
-    exact: true,
-    id: "content",
-  },
-];
+import Login from "components/Auth/Login";
+import Dashboard from "components/Dashboard";
+import Product from "components/Products";
 
 function Routes() {
   return (
     <>
-      {routes.map((route) => (
-        <Route path={route.path} component={route.component} exact={route.exact} key={route.id} />
-      ))}
+      <Route path="/login" component={Login} />
+      <ProtectedRoute path="/" component={Dashboard} exact />
+      <ProtectedRoute path="/products" component={Product} />
     </>
   );
 }
